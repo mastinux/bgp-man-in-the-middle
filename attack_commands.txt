@@ -1,0 +1,23 @@
+./connect-bgp.sh R200
+
+enable
+configure terminal
+
+ip prefix-list evil-prefix-list permit 10.10.200.0/24
+
+route-map evil-route-map permit 10
+match ip address prefix-list evil-prefix-list
+set as-path prepend 100 100 100
+
+-----------------------------------------------------
+
+./connect-bgp.sh R200
+
+enable
+configure terminal
+
+ip route 10.10.200.0/24 10.10.12.1
+
+-----------------------------------------------------
+
+verifica con: show running-config

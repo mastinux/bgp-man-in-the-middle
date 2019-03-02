@@ -176,9 +176,9 @@ def main():
 	os.system('pgrep bgpd | xargs kill -9')
 	os.system('pgrep -f webserver.py | xargs kill -9')
 
-	os.system('sudo wireshark /tmp/R100-eth1.pcap -Y \'not ipv6\' &')
+	# os.system('sudo wireshark /tmp/R100-eth1.pcap -Y \'not ipv6\' &')
 	os.system('sudo wireshark /tmp/R100-eth2.pcap -Y \'not ipv6\' &')
-	os.system('sudo wireshark /tmp/R200-eth1.pcap -Y \'not ipv6\' &')
+	# os.system('sudo wireshark /tmp/R200-eth1.pcap -Y \'not ipv6\' &')
 	os.system('sudo wireshark /tmp/R200-eth2.pcap -Y \'not ipv6\' &')
 
 

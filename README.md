@@ -1,8 +1,8 @@
-# bgp-path-hijacking-attack
+# bgp-man-in-the-middle
 
 Base code available here: https://bitbucket.org/jvimal/bgp
 
-Code analized and commented
+Attack description available here: https://www.defcon.org/images/defcon-16/dc16-presentations/defcon-16-pilosov-kapela.pdf
 
 ---
 
@@ -37,6 +37,10 @@ Code analized and commented
 ---
 
 ## Attack execution
+
+\#TODO
+
+<!--
 
 Per provare la simulazione, seguiamo i seguenti passi.
 
@@ -201,4 +205,5 @@ Fermiamo il terminale connesso a R1.
 Fermiamo le istanze digitando exit nel terminale di mininet.
 
 `mininet> exit`
-# bgp-man-in-the-middle
+
+-->

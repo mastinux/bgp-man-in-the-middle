@@ -98,7 +98,7 @@ def getGateway(hostname):
 	AS, idx = hostname.replace('h', '').split('-')
 	AS = int(AS)
 
-	gw = '10.10.%s.254/24' % (AS)
+	gw = '10.10.%s.254' % (AS)
 
 	return gw
 
@@ -137,6 +137,7 @@ def main():
 	for host in net.hosts:
 		host.cmd("ifconfig %s-eth0 %s" % (host.name, getIP(host.name)))
 		host.cmd("route add default gw %s" % (getGateway(host.name)))
+		print getGateway(host.name)
 
 	log("Configuring routers ...")
 	for router in net.switches:
@@ -146,10 +147,8 @@ def main():
 	log2("sysctl changes to take effect", args.sleep, col='cyan')
 
 	for router in net.switches:
-		#router.cmd("tcpdump -i %s-eth1 -w /tmp/%s-eth1.pcap not arp > /tmp/tcpdump-%s-eth1.out 2> /tmp/tcpdump-%s-eth1.err &" % (router.name, router.name, router.name, router.name), shell=True)
-		#router.cmd("tcpdump -i %s-eth2 -w /tmp/%s-eth2.pcap not arp > /tmp/tcpdump-%s-eth2.out 2> /tmp/tcpdump-%s-eth2.err &" % (router.name, router.name, router.name, router.name), shell=True)
-		router.cmd("tcpdump -i %s-eth1 -w /tmp/%s-eth1.pcap > /tmp/tcpdump-%s-eth1.out 2> /tmp/tcpdump-%s-eth1.err &" % (router.name, router.name, router.name, router.name), shell=True)
-		router.cmd("tcpdump -i %s-eth2 -w /tmp/%s-eth2.pcap > /tmp/tcpdump-%s-eth2.out 2> /tmp/tcpdump-%s-eth2.err &" % (router.name, router.name, router.name, router.name), shell=True)
+		router.cmd("tcpdump -i %s-eth1 -w /tmp/%s-eth1.pcap not arp > /tmp/tcpdump-%s-eth1.out 2> /tmp/tcpdump-%s-eth1.err &" % (router.name, router.name, router.name, router.name), shell=True)
+		router.cmd("tcpdump -i %s-eth2 -w /tmp/%s-eth2.pcap not arp > /tmp/tcpdump-%s-eth2.out 2> /tmp/tcpdump-%s-eth2.err &" % (router.name, router.name, router.name, router.name), shell=True)
 
 		router.cmd("~/quagga-1.2.4/zebra/zebra -f conf/zebra-%s.conf -d -i /tmp/zebra-%s.pid > logs/%s-zebra-stdout 2>&1" % (router.name, router.name, router.name))
 		router.waitOutput()

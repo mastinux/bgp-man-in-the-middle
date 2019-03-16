@@ -262,6 +262,14 @@ Analogamente per il daemon bgp di R30 risulta
 
 Vediamo che R30 inoltrerà il traffico verso la rete 10.200.0.0/24 attraverso l'AS40 invece che direttamente all'AS200.
 
+**. Verifichiamo la raggiungibilità degli host tramite ping.**
+
+In un altro terminale lanciamo il seguente script
+
+`$ ./ping.sh`
+
+Questo esegue un songolo ping dagli host presenti negli AS AS100, AS40 e AS30 verso gli host presenti nell'AS AS200.
+
 **. Fermiamo l'ambiente di simulazione.**
 
 Fermiamo il terminali connessi a R100.
@@ -315,3 +323,61 @@ Prima dell'attacco AS200 annuncia ad AS30 la raggiungibilità della rete 10.200.
 Dopo l'attacco AS30 annuncia ad AS200 la raggiungibilità della rete 10.200.0.0/24 attraverso gli AS AS30, AS40, AS100
 
 ![R30-pre-attack-R30-UPDATE](./images/9-R30-pre-attack-R30-UPDATE.png)
+
+# Routing Table dei router
+
+Routing table di R100 prima dell'attacco
+
+![R100-pre-attack](./images/RT0-R100-pre-attack.png)
+
+Routing table di R100 dopo l'attacco
+
+![R100-post-attack](./images/RT1-R100-post-attack.png)
+
+Routing table di R40 prima dell'attacco
+
+![R40-pre-attack](./images/RT2-R40-pre-attack.png)
+
+Routing table di R40 dopo l'attacco
+
+![R40-post-attack](./images/RT3-R40-post-attack.png)
+
+Routing table di R30 prima dell'attacco
+
+![R30-pre-attack](./images/RT4-R30-pre-attack.png)
+
+Routing table di R30 dopo l'attacco
+
+![R30-post-attack](./images/RT5-R30-post-attack.png)
+
+# Ping di raggiungibilità
+
+R30 inoltra il traffico per 10.200.0.0/24 verso l'AS40
+
+![30pings200](./images/ping0-30pings200.png)
+
+R40 inoltra il traffico per 10.200.0.0/24 verso l'AS100
+
+![40pings200](./images/ping1-40pings200.png)
+
+![30pings200](./images/ping2-30pings200.png)
+
+R100 inoltra il traffico per 10.200.0.0/24 verso l'AS10
+
+![40pings200](./images/ping3-40pings200.png)
+
+![30pings200](./images/ping4-30pings200.png)
+
+![100pings200](./images/ping5-100pings200.png)
+
+R10 inoltra il traffico per 10.200.0.0/24 verso l'AS20
+
+![100pings200](./images/ping6-100pings200.png)
+
+![40pings200](./images/ping7-40pings200.png)
+
+R20 inoltra il traffico per 10.200.0.0/24 verso l'AS200
+
+![100pings200](./images/ping8-100pings200.png)
+
+![40pings200](./images/ping9-40pings200.png)

@@ -75,7 +75,7 @@ class SimpleTopo(Topo):
 		hosts = []
 		for router in routers:
 			hostname = 'h%s-1' % router.replace('R', '')
-			print router, hostname
+			#print router, hostname
 			host = self.addNode(hostname)
 			hosts.append(host)
 			self.addLink(router, host)
@@ -98,7 +98,7 @@ def getIP(hostname):
 
 	ip = '10.%s.0.%s/24' % (AS, idx)
 
-	print hostname, ip
+	#print hostname, ip
 
 	return ip
 
@@ -109,7 +109,7 @@ def getGateway(hostname):
 
 	gw = '10.%s.0.254' % (AS)
 
-	print hostname, gw
+	#print hostname, gw
 
 	return gw
 
@@ -148,7 +148,7 @@ def main():
 	for host in net.hosts:
 		host.cmd("ifconfig %s-eth0 %s" % (host.name, getIP(host.name)))
 		host.cmd("route add default gw %s" % (getGateway(host.name)))
-		print getGateway(host.name)
+		#print getGateway(host.name)
 
 	log("Configuring routers ...")
 	for router in net.switches:

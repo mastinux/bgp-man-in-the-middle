@@ -1,40 +1,44 @@
 # bgp-man-in-the-middle
 
-Descrizione dell'attacco disponibile qui: https://www.defcon.org/images/defcon-16/dc16-presentations/defcon-16-pilosov-kapela.pdf
+## Installazione VM
+
+Scaricare la VM Mininet [http://www.scs.stanford.edu/~jvimal/mininet-sigcomm14/mininet-tutorial-vm-64bit.zip](http://www.scs.stanford.edu/~jvimal/mininet-sigcomm14/mininet-tutorial-vm-64bit.zip).  
+Per accedere:
+
+- username: mininet
+- password: mininet
+
+## Preparazione mininet
+
+- `$ git clone https://github.com/mininet/mininet`
+
+- `$ cd mininet`
+
+- `$ git checkout 2.3.0d4`
+
+- `$ ./util/install.sh -a`
+
+- `$ mn --test pingall`
+
+- `$ mn --version`
+
+## Quagga preparation
+
+Scaricare quagga-1.2.4 from [http://download.savannah.gnu.org/releases/quagga/](http://download.savannah.gnu.org/releases/quagga/) nella tua `$HOME` ed estrai il package
+
+- `$ cd ~/quagga-1.2.4`
+
+- `# chown mininet:mininet /var/run/quagga`
+
+- modifica il file `configure`, aggiungendo `${quagga_statedir_prefix}/var/run/quagga` prima di tutte le opzioni del loop su `QUAGGA_STATE_DIR` 
+
+- `$ ./configure --enable-user=mininet --enable-group=mininet`
+
+- `$ make`
 
 ---
 
-## Preparazione Mininet
-
-- `git clone https://github.com/mininet/mininet`
-
-- `cd mininet`
-
-- `git checkout 2.3.0d4`
-
-- `util/install.sh -a`
-
-- `mn --test pingall`
-
-- `mn --version`
-
-## Preparazione Quagga
-
-- esegui il download quagga-1.2.4 da [qui](http://download.savannah.gnu.org/releases/quagga/) nella tua `$HOME` ed estrai il file compresso
-
-- `cd ~/quagga-1.2.4`
-
-- `chown mininet:mininet /var/run/quagga`
-
-- modifica il file `configure`, aggiungendo `${quagga_statedir_prefix}/var/run/quagga` prima di tutte le opzioni nel loop `for` per `QUAGGA_STATE_DIR`
-
-- `./configure --enable-user=mininet --enable-group=mininet`
-
-- `make`
-
----
-
-## Spiegazione dell'attacco
+## Descrizione dell'attacco
 
 La topologia presenta sei AS (AS100, AS200, AS10, AS20, AS30, AS40) ognuno gestito da un'istanza del daemon bgp (rispettivamente R100, R200, R10, R20, R30, R40).
 
@@ -88,7 +92,7 @@ Per provare la simulazione, seguiamo i seguenti passi.
 
 Avviamo le istanze dei router, degli AS e degli host eseguendo il comando.
 
-`$ python bgp.py`
+`# python bgp.py`
 
 **. Accediamo al daemon bgp.**
 

@@ -11,25 +11,24 @@ sul neighbor 9.0.110.1
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CASO 10 20 200 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-enable
-en
 configure terminal
-
+!
 router bgp 100
    network 10.200.0.0/24
    neighbor 9.0.110.1 route-map evil-route-map out
    exit
+!
 ip prefix-list evil-prefix-list permit 10.200.0.0/24
+!
 route-map evil-route-map permit 10
    match ip address prefix-list evil-prefix-list
    set as-path prepend 10 20 200
+route-map evil-route-map permit 20
    exit
 exit
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CASO 40 30 200 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-enable
-en
 configure terminal
 router bgp 100
    network 10.200.0.0/24
@@ -48,8 +47,6 @@ exit
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CASO 10 20 200 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-enable
-en
 configure terminal
 ip route 10.200.0.0/24 9.0.110.1
 exit

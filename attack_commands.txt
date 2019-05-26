@@ -1,9 +1,9 @@
 adatta i comandi lanciati in base al best path 
 scelto da R100 per raggiungere 10.200.0.0/22
 quindi se sceglie 10 20 200
-applica la route-map sul neighbor 10.10.140.1
+applica la route-map sul neighbor 9.0.140.1
 diversamente
-sul neighbor 10.10.110.1
+sul neighbor 9.0.110.1
 
 --------------------------------------------------------------------------------
 
@@ -17,7 +17,7 @@ configure terminal
 
 router bgp 100
    network 10.200.0.0/24
-   neighbor 10.10.110.1 route-map evil-route-map out
+   neighbor 9.0.110.1 route-map evil-route-map out
    exit
 ip prefix-list evil-prefix-list permit 10.200.0.0/24
 route-map evil-route-map permit 10
@@ -33,7 +33,7 @@ en
 configure terminal
 router bgp 100
    network 10.200.0.0/24
-   neighbor 10.10.140.1 route-map evil-route-map out
+   neighbor 9.0.140.1 route-map evil-route-map out
    exit
 ip prefix-list evil-prefix-list permit 10.200.0.0/24
 route-map evil-route-map permit 10
@@ -51,7 +51,7 @@ exit
 enable
 en
 configure terminal
-ip route 10.200.0.0/24 10.10.110.1
+ip route 10.200.0.0/24 9.0.110.1
 exit
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CASO 40 30 200 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -59,7 +59,7 @@ exit
 enable
 en
 configure terminal
-ip route 10.200.0.0/24 10.10.140.1
+ip route 10.200.0.0/24 9.0.140.1
 exit
 
 --------------------------------------------------------------------------------

@@ -1,0 +1,13 @@
+e se facessi il NATting direttamente su R100?
+
+--------------------------------------------------------------------------------
+
+PROBLEMA: R100 dopo aver lanciato l'attacco non inoltra i pacchetti destinati a 10.200.0.1
+nè all'AS legittimo nè all'host interno falso
+
+--------------------------------------------------------------------------------
+
+usando python
+cattura i pacchetti che arrivano su h100-1-eth1
+cambia l'IP sorgente e invialo su h100-1-eth0
+implementa anche forward in senso opposto

@@ -89,7 +89,7 @@ class SimpleTopo(Topo):
 		self.addLink('R40', 'R100')
 		#self.addLink('R20', 'R30')
 
-		self.addLink('R100', 'h100-1')
+		#self.addLink('R100', 'h100-1')
 
 		return
 
@@ -148,15 +148,13 @@ def main():
 
 	log("Configuring hosts ...")
 	for host in net.hosts:
-
-		if host.name == 'h100-1':
-			# not configuring default gw on h100-1 but IP addresses on two interfaces
-			# host.cmd("ifconfig %s-eth0 %s" % (host.name, getIP(host.name)))
-			host.cmd("ifconfig %s-eth1 %s" % (host.name, '10.101.0.1/24'))
-		#else:
-
 		host.cmd("ifconfig %s-eth0 %s" % (host.name, getIP(host.name)))
 		host.cmd("route add default gw %s" % (getGateway(host.name)))
+
+		"""
+		if host.name == 'h100-1':
+			host.cmd("ifconfig %s-eth1 %s" % (host.name, '10.200.0.1/24'))
+		"""
 
 	log("Configuring routers ...")
 	for router in net.switches:

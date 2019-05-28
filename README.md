@@ -118,21 +118,31 @@ Output:
 
 	BGP table version is 0, local router ID is 100.100.100.100
 	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
-	              i internal, r RIB-failure, S Stale, R Removed
+		          i internal, r RIB-failure, S Stale, R Removed
 	Origin codes: i - IGP, e - EGP, ? - incomplete
-	
+
 	   Network          Next Hop            Metric LocPrf Weight Path
-	*> 10.10.0.0/22     10.10.110.1              0             0 10 i
-	*  10.20.0.0/22     10.10.140.1                            0 40 30 200 20 i
-	*>                  10.10.110.1                            0 10 20 i
-	*  10.30.0.0/22     10.10.110.1                            0 10 20 200 30 i
-	*>                  10.10.140.1                            0 40 30 i
-	*> 10.40.0.0/22     10.10.140.1              0             0 40 i
+	*> 9.0.30.0/30      9.0.110.1                0             0 10 i
+	*> 9.0.70.0/30      9.0.140.1                0             0 40 i
+	*  9.0.110.0/30     9.0.110.1                0             0 10 i
+	*>                  0.0.0.0                  0         32768 i
+	*  9.0.140.0/30     9.0.140.1                0             0 40 i
+	*>                  0.0.0.0                  0         32768 i
+	*> 9.0.220.0/30     9.0.110.1                              0 10 20 i
+	*                   9.0.140.1                              0 40 30 200 i
+	*  9.0.230.0/30     9.0.110.1                              0 10 20 200 i
+	*>                  9.0.140.1                              0 40 30 i
+	*> 10.10.0.0/22     9.0.110.1                0             0 10 i
+	*  10.20.0.0/22     9.0.140.1                              0 40 30 200 20 i
+	*>                  9.0.110.1                              0 10 20 i
+	*  10.30.0.0/22     9.0.110.1                              0 10 20 200 30 i
+	*>                  9.0.140.1                              0 40 30 i
+	*> 10.40.0.0/22     9.0.140.1                0             0 40 i
 	*> 10.100.0.0/22    0.0.0.0                  0         32768 i
-	*> 10.200.0.0/22    10.10.110.1                            0 10 20 200 i
-	*                   10.10.140.1                            0 40 30 200 i
-	
-	Displayed  6 out of 9 total prefixes
+	*> 10.200.0.0/22    9.0.110.1                            100 10 20 200 i
+	*                   9.0.140.1                              0 40 30 200 i
+
+	Displayed  12 out of 19 total prefixes
 
 Dall'output capiamo che l'AS100 sceglie il path "10 20 200" per raggiungere la rete 10.200.0.0/22.
 
@@ -159,21 +169,25 @@ Verifichiamo le rotte scelte da R100. Lanciamo il comando:
 Output:
 
 	Codes: K - kernel route, C - connected, S - static, R - RIP,
-	       O - OSPF, I - IS-IS, B - BGP, P - PIM, A - Babel, N - NHRP,
-	       > - selected route, * - FIB route
-	
-	B>* 10.10.0.0/22 [20/0] via 10.10.110.1, R100-eth2, 00:00:28
-	C>* 10.10.110.0/30 is directly connected, R100-eth2
-	C>* 10.10.140.0/30 is directly connected, R100-eth3
-	B>* 10.20.0.0/22 [20/0] via 10.10.110.1, R100-eth2, 00:00:25
-	B>* 10.30.0.0/22 [20/0] via 10.10.140.1, R100-eth3, 00:00:25
-	B>* 10.40.0.0/22 [20/0] via 10.10.140.1, R100-eth3, 00:00:28
+		   O - OSPF, I - IS-IS, B - BGP, P - PIM, A - Babel, N - NHRP,
+		   > - selected route, * - FIB route
+
+	B>* 9.0.30.0/30 [20/0] via 9.0.110.1, R100-eth2, 00:01:07
+	B>* 9.0.70.0/30 [20/0] via 9.0.140.1, R100-eth3, 00:01:08
+	C>* 9.0.110.0/30 is directly connected, R100-eth2
+	C>* 9.0.140.0/30 is directly connected, R100-eth3
+	B>* 9.0.220.0/30 [20/0] via 9.0.110.1, R100-eth2, 00:01:04
+	B>* 9.0.230.0/30 [20/0] via 9.0.140.1, R100-eth3, 00:01:05
+	B>* 10.10.0.0/22 [20/0] via 9.0.110.1, R100-eth2, 00:01:07
+	B>* 10.20.0.0/22 [20/0] via 9.0.110.1, R100-eth2, 00:01:04
+	B>* 10.30.0.0/22 [20/0] via 9.0.140.1, R100-eth3, 00:01:05
+	B>* 10.40.0.0/22 [20/0] via 9.0.140.1, R100-eth3, 00:01:08
 	C>* 10.100.0.0/24 is directly connected, R100-eth1
-	B>* 10.200.0.0/22 [20/0] via 10.10.110.1, R100-eth2, 00:00:22
+	B>* 10.200.0.0/22 [20/0] via 9.0.110.1, R100-eth2, 00:01:01
 	C>* 127.0.0.0/8 is directly connected, lo
 	C>* 127.0.0.1/32 is directly connected, lo
 
-Vediamo che R100 usa una rotta appresa tramite BGP passando attraverso l'AS10 (il router dirimpettaio R10 ha indirizzo IP 10.10.110.1) per raggiungere la rete 10.200.0.0/22.
+Vediamo che R100 usa una rotta appresa tramite BGP passando attraverso l'AS10 (il router dirimpettaio R10 ha indirizzo IP 9.0.110.1) per raggiungere la rete 10.200.0.0/22.
 
 **. Verifichiamo l'instradamento tramite traceroute.**
 
@@ -206,7 +220,7 @@ Imponiamo la route-map. Nella shell bgp di R100 lanciamo i seguenti comandi:
 	bgpd-R100(config)# router bgp 100
 	bgpd-R100(config)#   network 10.200.0.0/24
 	##################   la rete viene annunciata ai vicini
-	bgpd-R100(config)#   neighbor 10.10.110.1 route-map evil-route-map out
+	bgpd-R100(config)#   neighbor 9.0.110.1 route-map evil-route-map out
 	##################   la route-map viene applicata in output verso l'AS10
 	bgpd-R100(config)#   exit
 	bgpd-R100(config)# ip prefix-list evil-prefix-list permit 10.200.0.0/24
@@ -221,7 +235,7 @@ Imponiamo la route-map. Nella shell bgp di R100 lanciamo i seguenti comandi:
 Impostiamo la rotta statica. Nella shell zebra di R100 lanciamo i seguenti comandi:
 
 	R100# configure terminal
-	R100(config)# ip route 10.200.0.0/24 10.10.110.1
+	R100(config)# ip route 10.200.0.0/24 9.0.110.1
 
 Imponiamo le regole di NATting lanciando lo script:
 
@@ -233,44 +247,63 @@ Accediamo al daemon bgp di R40 (`./connect-bgp.sh R40`) e la sua routing table (
 
 	BGP table version is 0, local router ID is 40.40.40.40
 	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
-	              i internal, r RIB-failure, S Stale, R Removed
+		          i internal, r RIB-failure, S Stale, R Removed
 	Origin codes: i - IGP, e - EGP, ? - incomplete
-	
+
 	   Network          Next Hop            Metric LocPrf Weight Path
-	*> 10.10.0.0/22     10.10.140.2                            0 100 10 i
-	*  10.20.0.0/22     10.10.140.2                            0 100 10 20 i
-	*>                  10.10.70.1                             0 30 200 20 i
-	*> 10.30.0.0/22     10.10.70.1               0             0 30 i
+	*  9.0.30.0/30      9.0.70.1                               0 30 200 20 i
+	*>                  9.0.140.2                              0 100 10 i
+	*  9.0.70.0/30      9.0.70.1                 0             0 30 i
+	*>                  0.0.0.0                  0         32768 i
+	*> 9.0.110.0/30     9.0.140.2                0             0 100 i
+	*  9.0.140.0/30     9.0.140.2                0             0 100 i
+	*>                  0.0.0.0                  0         32768 i
+	*  9.0.220.0/30     9.0.140.2                              0 100 10 20 i
+	*>                  9.0.70.1                               0 30 200 i
+	*> 9.0.230.0/30     9.0.70.1                 0             0 30 i
+	*> 10.10.0.0/22     9.0.140.2                              0 100 10 i
+	*  10.20.0.0/22     9.0.140.2                              0 100 10 20 i
+	*>                  9.0.70.1                               0 30 200 20 i
+	*> 10.30.0.0/22     9.0.70.1                 0             0 30 i
 	*> 10.40.0.0/22     0.0.0.0                  0         32768 i
-	*> 10.100.0.0/22    10.10.140.2              0             0 100 i
-	*  10.200.0.0/22    10.10.140.2                            0 100 10 20 200 i
-	*>                  10.10.70.1                             0 30 200 i
-	*> 10.200.0.0/24    10.10.140.2              0             0 100 i
-	
-	Displayed  7 out of 9 total prefixes
+	*> 10.100.0.0/22    9.0.140.2                0             0 100 i
+	*  10.200.0.0/22    9.0.140.2                              0 100 10 20 200 i
+	*>                  9.0.70.1                               0 30 200 i
+	*> 10.200.0.0/24    9.0.140.2                0             0 100 i
+
+	Displayed  13 out of 19 total prefixes
 	
 Vediamo che R40 inoltrerà il traffico verso la rete 10.200.0.0/24 ad AS100 invece che attraverso AS30.
 
 Analogamente per il daemon bgp di R30 risulta
 
-	BGP table version is 0, local router ID is 30.30.30.30
-	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
-	              i internal, r RIB-failure, S Stale, R Removed
-	Origin codes: i - IGP, e - EGP, ? - incomplete
-	
-	   Network          Next Hop            Metric LocPrf Weight Path
-	*  10.10.0.0/22     10.10.70.2                             0 40 100 10 i
-	*>                  10.10.230.2                            0 200 20 10 i
-	*  10.20.0.0/22     10.10.70.2                             0 40 100 10 20 i
-	*>                  10.10.230.2                            0 200 20 i
-	*> 10.30.0.0/22     0.0.0.0                  0         32768 i
-	*> 10.40.0.0/22     10.10.70.2               0             0 40 i
-	*  10.100.0.0/22    10.10.230.2                            0 200 20 10 100 i
-	*>                  10.10.70.2                             0 40 100 i
-	*> 10.200.0.0/22    10.10.230.2              0             0 200 i
-	*> 10.200.0.0/24    10.10.70.2                             0 40 100 i
-	
-	Displayed  7 out of 10 total prefixes
+BGP table version is 0, local router ID is 30.30.30.30
+Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
+              i internal, r RIB-failure, S Stale, R Removed
+Origin codes: i - IGP, e - EGP, ? - incomplete
+
+   Network          Next Hop            Metric LocPrf Weight Path
+*  9.0.30.0/30      9.0.70.2                               0 40 100 10 i
+*>                  9.0.230.2                              0 200 20 i
+*  9.0.70.0/30      9.0.70.2                 0             0 40 i
+*>                  0.0.0.0                  0         32768 i
+*  9.0.110.0/30     9.0.230.2                              0 200 20 10 i
+*>                  9.0.70.2                               0 40 100 i
+*> 9.0.140.0/30     9.0.70.2                 0             0 40 i
+*> 9.0.220.0/30     9.0.230.2                0             0 200 i
+*  9.0.230.0/30     9.0.230.2                0             0 200 i
+*>                  0.0.0.0                  0         32768 i
+*  10.10.0.0/22     9.0.230.2                              0 200 20 10 i
+*>                  9.0.70.2                               0 40 100 10 i
+*> 10.20.0.0/22     9.0.230.2                              0 200 20 i
+*> 10.30.0.0/22     0.0.0.0                  0         32768 i
+*> 10.40.0.0/22     9.0.70.2                 0             0 40 i
+*  10.100.0.0/22    9.0.230.2                              0 200 20 10 100 i
+*>                  9.0.70.2                               0 40 100 i
+*> 10.200.0.0/22    9.0.230.2                0             0 200 i
+*> 10.200.0.0/24    9.0.70.2                               0 40 100 i
+
+Displayed  13 out of 19 total prefixes
 
 Vediamo che R30 inoltrerà il traffico verso la rete 10.200.0.0/24 ad AS40 invece che direttamente ad AS200.
 

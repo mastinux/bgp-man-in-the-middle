@@ -277,31 +277,31 @@ Vediamo che R40 inoltrerà il traffico verso la rete 10.200.0.0/24 ad AS100 inve
 
 Analogamente per il daemon bgp di R30 risulta
 
-BGP table version is 0, local router ID is 30.30.30.30
-Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
-              i internal, r RIB-failure, S Stale, R Removed
-Origin codes: i - IGP, e - EGP, ? - incomplete
+	BGP table version is 0, local router ID is 30.30.30.30
+	Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
+		          i internal, r RIB-failure, S Stale, R Removed
+	Origin codes: i - IGP, e - EGP, ? - incomplete
 
-   Network          Next Hop            Metric LocPrf Weight Path
-*  9.0.30.0/30      9.0.70.2                               0 40 100 10 i
-*>                  9.0.230.2                              0 200 20 i
-*  9.0.70.0/30      9.0.70.2                 0             0 40 i
-*>                  0.0.0.0                  0         32768 i
-*  9.0.110.0/30     9.0.230.2                              0 200 20 10 i
-*>                  9.0.70.2                               0 40 100 i
-*> 9.0.140.0/30     9.0.70.2                 0             0 40 i
-*> 9.0.220.0/30     9.0.230.2                0             0 200 i
-*  9.0.230.0/30     9.0.230.2                0             0 200 i
-*>                  0.0.0.0                  0         32768 i
-*  10.10.0.0/22     9.0.230.2                              0 200 20 10 i
-*>                  9.0.70.2                               0 40 100 10 i
-*> 10.20.0.0/22     9.0.230.2                              0 200 20 i
-*> 10.30.0.0/22     0.0.0.0                  0         32768 i
-*> 10.40.0.0/22     9.0.70.2                 0             0 40 i
-*  10.100.0.0/22    9.0.230.2                              0 200 20 10 100 i
-*>                  9.0.70.2                               0 40 100 i
-*> 10.200.0.0/22    9.0.230.2                0             0 200 i
-*> 10.200.0.0/24    9.0.70.2                               0 40 100 i
+	   Network          Next Hop            Metric LocPrf Weight Path
+	*  9.0.30.0/30      9.0.70.2                               0 40 100 10 i
+	*>                  9.0.230.2                              0 200 20 i
+	*  9.0.70.0/30      9.0.70.2                 0             0 40 i
+	*>                  0.0.0.0                  0         32768 i
+	*  9.0.110.0/30     9.0.230.2                              0 200 20 10 i
+	*>                  9.0.70.2                               0 40 100 i
+	*> 9.0.140.0/30     9.0.70.2                 0             0 40 i
+	*> 9.0.220.0/30     9.0.230.2                0             0 200 i
+	*  9.0.230.0/30     9.0.230.2                0             0 200 i
+	*>                  0.0.0.0                  0         32768 i
+	*  10.10.0.0/22     9.0.230.2                              0 200 20 10 i
+	*>                  9.0.70.2                               0 40 100 10 i
+	*> 10.20.0.0/22     9.0.230.2                              0 200 20 i
+	*> 10.30.0.0/22     0.0.0.0                  0         32768 i
+	*> 10.40.0.0/22     9.0.70.2                 0             0 40 i
+	*  10.100.0.0/22    9.0.230.2                              0 200 20 10 100 i
+	*>                  9.0.70.2                               0 40 100 i
+	*> 10.200.0.0/22    9.0.230.2                0             0 200 i
+	*> 10.200.0.0/24    9.0.70.2                               0 40 100 i
 
 Displayed  13 out of 19 total prefixes
 

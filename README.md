@@ -60,7 +60,7 @@ Quindi ciascun AS sceglie i seguenti AS_PATH per raggiungerla.
 |AS40	|AS30, AS200|
 |AS100	|AS10, AS20, AS200|
 
-L'attaccante R100 annuncia la rete 10.200.0.0 con una subnet più specifica. Quindi invece che una /22 annuncia una /24. Questo è possibile sfruttando una route-map.
+L'attaccante R100 annuncia la rete 10.200.0.0 con una sotto rete più specifica. Quindi invece che una /22 annuncia una /24. Questo è possibile sfruttando una route-map.
 
 <!-- https://www.examcollection.com/certification-training/ccnp-concept-of-route-maps.html -->
 
@@ -68,9 +68,11 @@ L'attaccante R100 annuncia la rete 10.200.0.0 con una subnet più specifica. Qui
 > Le route-map hanno alcune caratteristiche in comune con le ACL. Entrambe sono un meccanismo generico. Sono una sequenza ordinata di singole istruzioni, ognuna delle quali può risultare in un deny o in un permit.
 > Per quanto riguarda le differenze, le route-map sono più flessibili delle ACL e possono eseguire dei controlli sulle rotte in base a criteri non disponibili per le ACL. Il risultato dell'applicazione di un'ACL è sì o no, quindi consente o meno la redistribuzione della rotta. Mentre la route-map non solo permette o nega la redistribuzione ma è in grado di modificare le informazioni associate alla rotta.
 
-Gli AS sceglieranno la rotta più specifica per inoltrare il traffico, quindi la /24.
-L'attaccante R100 deve installare una rotta statica per la rete 10.200.0.0/24 verso AS10.
-Inoltre deve fare NATting dell'indirizzo IP sorgente del traffico proveniente dai prefissi annunciati da AS30 e AS40, convertendolo nell'indirizzo IP della sua interfaccia con cui è connesso con AS10.
+Gli AS vittima sceglieranno la rotta più specifica per inoltrare il traffico verso la rete obiettivo, quindi la /24.
+L'attaccante R100 deve installare una rotta statica per la rete 10.200.0.0/24 verso il vicino R10.
+Inoltre deve fare NATting dell'indirizzo IP sorgente del traffico proveniente dai prefissi annunciati da AS30 e AS40, convertendolo nell'indirizzo IP della sua interfaccia con cui è connesso a R10.
+
+Per nascondersi da un eventuale `traceroute` lanciato dagli host vittima, l'attaccante incrementa i valori di TTL dei pacchetti che inoltra.
 
 A seguito dell'attacco gli AS_PATH scelti da ciascun AS per raggiungere la rete 10.200.0.0/24 risultano i seguenti.
 
@@ -84,7 +86,9 @@ A seguito dell'attacco gli AS_PATH scelti da ciascun AS per raggiungere la rete 
 |AS40	|AS100|
 |AS100	|AS10, AS20, AS200|
 
-Gli AS30 e AS40 suppongono che la rete 10.200.0.0/24 sia ospitata dall'AS100. Quindi il traffico in partenza da AS30 e AS40 destinato alla rete 10.200.0.0/24 viene inoltrato all'AS100, che lo gestirà usando la rotta statica e la regola di NAT inoltrandolo verso l'AS10.
+Gli AS30 e AS40 suppongono che la rete 10.200.0.0/24 sia ospitata dall'AS100. Quindi il traffico in partenza da AS30 e AS40 destinato alla rete 10.200.0.0/24 viene inoltrato verso l'AS100, che lo gestirà usando la rotta statica e la regola di NAT inoltrandolo verso l'AS10.
+
+Gli host vittime non notano nessun cambiamento nella lunghezza del path per raggiungere la rete obiettivo in AS200, ma solo un incremento di latenza.
 
 ## Esecuzione dell'attacco
 
@@ -200,16 +204,16 @@ Gli output interessanti sono i seguenti.
 
 	########## 10.40.0.1 traceroute 10.200.0.1 ##########
 	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
-	 1  10.40.0.254  0.056 ms  0.020 ms  0.017 ms
-	 2  9.0.70.1  0.036 ms  0.029 ms  0.026 ms
-	 3  9.0.230.2  0.046 ms  0.038 ms  0.035 ms
-	 4  10.200.0.1  0.051 ms  0.044 ms  0.045 ms
+	 1  10.40.0.254  0.073 ms  0.019 ms  0.017 ms
+	 2  9.0.70.1  0.038 ms  0.028 ms  0.028 ms
+	 3  9.0.230.2  0.046 ms  0.037 ms  0.036 ms
+	 4  10.200.0.1  0.054 ms  0.047 ms  0.045 ms
 
 	########## 10.30.0.1 traceroute 10.200.0.1 ##########
 	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
-	 1  10.30.0.254  0.056 ms  0.020 ms  0.017 ms
-	 2  9.0.230.2  0.038 ms  0.031 ms  0.028 ms
-	 3  10.200.0.1  0.046 ms  0.039 ms  0.037 ms
+	 1  10.30.0.254  0.077 ms  0.020 ms  0.018 ms
+	 2  9.0.230.2  0.040 ms  0.031 ms  0.030 ms
+	 3  10.200.0.1  0.049 ms  0.043 ms  0.036 ms
 
 **. Lanciamo l'attacco.**
 
@@ -236,10 +240,6 @@ Impostiamo la rotta statica. Nella shell zebra di R100 lanciamo i seguenti coman
 
 	R100# configure terminal
 	R100(config)# ip route 10.200.0.0/24 9.0.110.1
-
-Imponiamo le regole di NATting lanciando lo script:
-
-`$ ./R100-nat.sh`
 
 **. Controlliamo le scelte di routing degli AS**
 
@@ -307,6 +307,12 @@ Displayed  13 out of 19 total prefixes
 
 Vediamo che R30 inoltrerà il traffico verso la rete 10.200.0.0/24 ad AS40 invece che direttamente ad AS200.
 
+**. Imponiamo il NATting**
+
+Imponiamo le sole regole di NATting lanciando lo script:
+
+`$ ./R100-nat.sh`
+
 **. Verifichiamo l'instradamento tramite traceroute.**
 
 In un altro terminale lanciamo il seguente script:
@@ -317,24 +323,55 @@ Gli output interessanti sono i seguenti, confrontabili con il precedente output 
 
 	########## 10.40.0.1 traceroute 10.200.0.1 ##########
 	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
-	 1  10.40.0.254  0.053 ms  0.018 ms  0.018 ms
-	 2  9.0.140.2  0.035 ms  0.027 ms  0.027 ms
-	 3  9.0.110.1  0.049 ms  0.038 ms  0.037 ms
-	 4  9.0.30.2  0.086 ms  0.048 ms  0.047 ms
+	 1  10.40.0.254  0.057 ms  0.019 ms  0.018 ms
+	 2  9.0.140.2  0.058 ms  0.035 ms  0.029 ms
+	 3  9.0.110.1  0.052 ms  0.040 ms  0.039 ms
+	 4  9.0.30.2  0.057 ms  0.049 ms  0.047 ms
 	 5  * * *
-	 6  10.200.0.1  0.070 ms  0.066 ms  0.064 ms
+	 6  10.200.0.1  0.076 ms  0.071 ms  0.081 ms
 
 	########## 10.30.0.1 traceroute 10.200.0.1 ##########
 	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
-	 1  10.30.0.254  0.055 ms  0.018 ms  0.017 ms
-	 2  9.0.70.2  0.036 ms  0.028 ms  0.028 ms
-	 3  9.0.140.2  0.044 ms  0.036 ms  0.035 ms
-	 4  9.0.110.1  0.058 ms  0.049 ms  0.089 ms
+	 1  10.30.0.254  0.055 ms  0.019 ms  0.017 ms
+	 2  9.0.70.2  0.037 ms  0.028 ms  0.028 ms
+	 3  9.0.140.2  0.047 ms  0.039 ms  0.037 ms
+	 4  9.0.110.1  0.059 ms  0.047 ms  0.048 ms
 	 5  * * *
 	 6  * * *
-	 7  10.200.0.1  0.095 ms  0.139 ms  0.145 ms
+	 7  10.200.0.1  0.084 ms  0.077 ms  0.076 ms
 
-Gli asterschi sono dovuti ad una mancata risposta per i particolari TTL (per il primo output 5, per il secondo 5,6).
+Gli host si accorgono che per raggiungere la rete 10.200.0.0 devono attraversare un percorso pi\`u lungo del solito.
+
+N.B.: Gli asterschi sono dovuti ad una mancata risposta per i particolari TTL (per il primo output 5, per il secondo 5,6).
+
+**. Imponiamo il NATting e il mascheramento dell'attaccante**
+
+Imponiamo le regole di NATting e l'incremento del TTL per nascondere l'attaccante lanciando lo script:
+
+`$ ./R100-nat-n-mangle.sh`s
+
+**. Riverifichiamo l'instradamento tramite traceroute.**
+
+In un altro terminale rilanciamo lo script:
+
+`$ ./test-traceroute.sh`
+
+Gli output interessanti sono i seguenti, confrontabili con il precedente output dello stesso script.
+
+	########## 10.40.0.1 traceroute 10.200.0.1 ##########
+	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
+	 1  10.40.0.254  0.057 ms  0.021 ms  0.017 ms
+	 2  9.0.30.2  0.076 ms  0.065 ms  0.064 ms
+	 3  * * *
+	 4  10.200.0.1  0.142 ms  0.086 ms  0.068 ms
+
+	########## 10.30.0.1 traceroute 10.200.0.1 ##########
+	traceroute to 10.200.0.1 (10.200.0.1), 10 hops max, 60 byte packets
+	 1  10.30.0.254  0.066 ms  0.020 ms  0.018 ms
+	 2  9.0.70.2  0.038 ms  0.029 ms  0.029 ms
+	 3  10.200.0.1  0.115 ms  0.099 ms  0.154 ms
+
+Vediamo che i client raggiungono la rete ospitata dall'AS200 con lo stesso numero di hop di una situazione stabile, ma con un leggero aumento di latenza.
 
 **. Fermiamo l'ambiente di simulazione.**
 

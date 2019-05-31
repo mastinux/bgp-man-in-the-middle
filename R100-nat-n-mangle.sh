@@ -2,7 +2,7 @@
 
 # https://gist.github.com/nerdalert/a1687ae4da1cc44a437d
 
-sudo rm /tmp/err
+sudo rm /tmp/err 2> /dev/null
 
 sudo python ./run.py --node R100 --cmd "iptables -t filter -F 2>> /tmp/err"
 sudo python ./run.py --node R100 --cmd "iptables -t nat -F 2>> /tmp/err"

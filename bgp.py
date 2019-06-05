@@ -158,6 +158,11 @@ def main():
 
 	log("Configuring routers ...")
 	for router in net.switches:
+		# 0 = no RPF
+		# 1 = RPF strict mode
+		# 2 = RPF loose mode
+		router.cmd("sysctl -w net.ipv4.conf.all.rp_filter=2")
+
 		router.cmd("sysctl -w net.ipv4.ip_forward=1")
 		router.waitOutput()
 

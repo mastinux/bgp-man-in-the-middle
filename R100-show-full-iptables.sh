@@ -1,0 +1,15 @@
+
+echo "------------------------------filter------------------------------"
+sudo python ./run.py --node R100 --cmd "iptables -t filter -nvL"
+echo "------------------------------nat------------------------------"
+sudo python ./run.py --node R100 --cmd "iptables -t nat -nvL"
+echo "------------------------------mangle------------------------------"
+sudo python ./run.py --node R100 --cmd "iptables -t mangle -nvL"
+echo "------------------------------raw------------------------------"
+sudo python ./run.py --node R100 --cmd "iptables -t raw -nvL"
+echo "------------------------------security------------------------------"
+sudo python ./run.py --node R100 --cmd "iptables -t security -nvL"
+echo "------------------------------------------------------------"
+sudo python ./run.py --node R100 --cmd "iptables -S"
+echo "------------------------------------------------------------"
+
